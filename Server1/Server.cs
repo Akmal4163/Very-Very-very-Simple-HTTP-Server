@@ -36,36 +36,46 @@ namespace Server1
             String data = null;
             Byte[] bytes = null;
 
+            string currentDate = null;
+            String[] arrayofdata = null;
+
             while (true)
             {
                 bytes = new byte[1024];
                 int bytes_received = client_socket.Receive(bytes);
                 data += Encoding.ASCII.GetString(bytes, 0, bytes_received);
                 Console.WriteLine(data);
-                if(data.Contains("GET"))
-                {
-                    string currentDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    string response = "<html><h1>Hello from C# server</h1><p>Method: GET</p><p>Current date and time: " + currentDate + "</p></html>";
 
-                    string httpResponse = "HTTP/1.1 200 OK\r\n"
+                string response = null;
+                currentDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                arrayofdata = data.Split(" ");
+                if (arrayofdata[0] == "GET")
+                {
+                   response = "<html><h1>Hello from C# server</h1><p>Method: GET</p><p>Current date and time: " + currentDate + "</p></html>";
+
+                }
+                else if (arrayofdata[0] == "POST")
+                {
+                    response = "Hello from C# server, Method: POST, Current date and time: " + currentDate;
+                }
+
+                string httpResponse = "HTTP/1.1 200 OK\r\n"
                         + "Content-Type: text/html\r\n"
                         + "Content-Length: " + response.Length + "\r\n"
                         + "\r\n"
                         + response;
 
-                    //String senderdata =;
-                    try
-                    {
-                        byte[] messagetoclient = Encoding.ASCII.GetBytes(httpResponse);
-                        client_socket.Send(messagetoclient);
-                        Console.WriteLine("sending data success");
-                    }
-                    catch
-                    {
-                        Console.Write(httpResponse);
-                    }
-
+                try
+                {
+                    byte[] messagetoclient = Encoding.ASCII.GetBytes(httpResponse);
+                    client_socket.Send(messagetoclient);
+                    Console.WriteLine("sending data success");
                 }
+                catch
+                {
+                    Console.Write(httpResponse);
+                }
+
 
                 if (data.IndexOf("<EOF>") > -1)
                 {
