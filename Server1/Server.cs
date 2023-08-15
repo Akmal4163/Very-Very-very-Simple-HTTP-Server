@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace Server1
 {
@@ -15,6 +16,14 @@ namespace Server1
         IPHostEntry host;
         IPAddress address;
         IPEndPoint localendpoint;
+
+        String data = null;
+        Byte[] bytes = null;
+
+        string currentDate = null;
+        String[] arrayofdata = null;
+
+        string response = null;
 
         public Server(int port)
         {
@@ -28,30 +37,31 @@ namespace Server1
             Socket server_socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             server_socket.Bind(localendpoint);
 
-            server_socket.Listen(10);
-
             Console.WriteLine("waiting for a connection");
-            Socket client_socket = server_socket.Accept();
 
-            String data = null;
-            Byte[] bytes = null;
-
-            string currentDate = null;
-            String[] arrayofdata = null;
+            server_socket.Listen(10);
 
             while (true)
             {
+                Socket client_socket = server_socket.Accept();
+                Task.Run(() => handlerequest(client_socket));
+            }
+
+        }
+
+        public void handlerequest(Socket client_socket)
+        {
                 bytes = new byte[1024];
                 int bytes_received = client_socket.Receive(bytes);
                 data += Encoding.ASCII.GetString(bytes, 0, bytes_received);
                 Console.WriteLine(data);
 
-                string response = null;
+                
                 currentDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 arrayofdata = data.Split(" ");
                 if (arrayofdata[0] == "GET")
                 {
-                   response = "<html><h1>Hello from C# server</h1><p>Method: GET</p><p>Current date and time: " + currentDate + "</p></html>";
+                    response = "<html><h1>Hello from C# server</h1><p>Method: GET</p><p>Current date and time: " + currentDate + "</p></html>";
 
                 }
                 else if (arrayofdata[0] == "POST")
@@ -70,22 +80,14 @@ namespace Server1
                     byte[] messagetoclient = Encoding.ASCII.GetBytes(httpResponse);
                     client_socket.Send(messagetoclient);
                     Console.WriteLine("sending data success");
+                    client_socket.Shutdown(SocketShutdown.Both);
+                    client_socket.Close();
                 }
                 catch
                 {
                     Console.Write(httpResponse);
                 }
 
-
-                if (data.IndexOf("<EOF>") > -1)
-                {
-                    break;
-                }
-            }
-            Console.WriteLine("bytes received: ", bytes, "data :", data);
-
-            client_socket.Shutdown(SocketShutdown.Both);
-            client_socket.Close();
         }
     }
 }
