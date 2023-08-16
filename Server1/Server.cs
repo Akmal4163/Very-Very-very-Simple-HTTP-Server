@@ -49,14 +49,22 @@ namespace Server1
 
         }
 
+        public string encodetobase64(String data)
+        {
+            byte[] textbytes = Encoding.ASCII.GetBytes(data);
+            return System.Convert.ToBase64String(textbytes);
+        }
+
         public void handlerequest(Socket client_socket)
         {
+            try
+            {
                 bytes = new byte[1024];
                 int bytes_received = client_socket.Receive(bytes);
                 data += Encoding.ASCII.GetString(bytes, 0, bytes_received);
                 Console.WriteLine(data);
 
-                
+
                 currentDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 arrayofdata = data.Split(" ");
                 if (arrayofdata[0] == "GET")
@@ -66,7 +74,13 @@ namespace Server1
                 }
                 else if (arrayofdata[0] == "POST")
                 {
-                    response = "Hello from C# server, Method: POST, Current date and time: " + currentDate;
+                    //response = "Hello from C# server, Method: POST, Current date and time: " + currentDate;
+                    response = encodetobase64(arrayofdata[14]);
+                    //foreach(string data in arrayofdata)
+                    //{
+                    //    Console.WriteLine(data);
+                    //}
+                    //Console.WriteLine(arrayofdata[14]);
                 }
 
                 string httpResponse = "HTTP/1.1 200 OK\r\n"
@@ -87,6 +101,10 @@ namespace Server1
                 {
                     Console.Write(httpResponse);
                 }
+            } catch
+            {
+                Console.WriteLine("cannot handle request");
+            }
 
         }
     }
